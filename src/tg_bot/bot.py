@@ -11,11 +11,21 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from tg_bot.mistral import mistral_get_content
+from tg_bot.semantic import semantic_analyze
+
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 
 dp = Dispatcher()
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+sentences = [
+    "Какой сегодня день",
+    "Какой сегодня год",
+    "Почему небо синее",
+]
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -24,8 +34,7 @@ async def command_start_handler(message: Message) -> None:
 @dp.message()
 async def echo_handler(message: Message) -> None:
     try:
-        content=message.text
-        print('content: ' + content + '\n')
+        content = semantic_analyze(model, sentences, message.text)
         answer = await mistral_get_content(content)
         await message.answer(answer)
     except TypeError:
